@@ -15,17 +15,15 @@
 %% limitations under the License.
 %%==============================================================================
 
+%% Includes
+-include_lib("xmpp/src/xml.hrl").
+
 %% Defines
 -define(WS(C), C =< $\s).
 
 -define(XMLNS_STREAM, <<"http://etherx.jabber.org/streams">>).
 
 %% Records
--record(xml, {tag :: atom() | binary(),
-              attrs = [] :: [attr()],
-              children = [] :: [xml() | cdata() | binary()]}).
--record(cdata, {data = <<>> :: binary()}).
-
 -record(stream,
         {%% XML attributes
           encoding = false :: boolean(),
@@ -82,12 +80,6 @@
               nresource :: binary()}).
 
 %% Types
--type attr() :: {atom() | binary(), binary()}.
--type xml() :: #xml{}.
--type cdata() :: #cdata{}.
-
--type opt() :: {atom(), _}.
-
 -type stanza_ns() :: 'jabber:client' | 'jabber:server'.
 -type iq_type() :: get | set | result | error.
 -type presence_type() :: undefined | probe | subscribe | subscribed |
