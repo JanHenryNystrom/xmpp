@@ -17,27 +17,12 @@
 
 %% Includes
 -include_lib("xmpp/src/xml.hrl").
+-include_lib("xmpp/src/stream.hrl").
 
 %% Defines
 -define(WS(C), C =< $\s).
 
--define(XMLNS_STREAM, <<"http://etherx.jabber.org/streams">>).
-
 %% Records
--record(stream,
-        {%% XML attributes
-          encoding = false :: boolean(),
-          standalone = false :: boolean(),
-          %% stream stanza attributes
-          from :: undefined | jid(),
-          to :: undefined | jid(),
-          version :: binary(),
-          id :: binary(),
-          'xml:lang' :: undefined | binary(),
-          xmlns :: stanza_ns(),
-          'xmlns:stream' :: undefined | binary()
-        }).
-
 -record(iq,
         { %% Attributes
           from :: undefined | jid(),
@@ -80,7 +65,6 @@
               nresource :: binary()}).
 
 %% Types
--type stanza_ns() :: 'jabber:client' | 'jabber:server'.
 -type iq_type() :: get | set | result | error.
 -type presence_type() :: undefined | probe | subscribe | subscribed |
                          unavailable | unsubscribe | unsubscribed.
