@@ -45,7 +45,7 @@
 %% Types
 -type state() :: #state{}.
 -type func() :: atom().
--type args() :: tuple(_).
+-type args() :: tuple().
 
 %% Defines
 -define(START_CHAR(C),
@@ -233,11 +233,11 @@ escape(<<H, T/binary>>, Acc) -> escape(T, <<Acc/binary, H>>).
 %% ===================================================================
 
 decode_start(<<>>, Acc, State) -> more(decode_start, Acc, State);
-decode_start(<<$[, T/binary>>, <<"![CDATA">>, State) ->
+decode_start(<<"![CDATA[", T/binary>>, <<>>, State) ->
     decode_cdata(T, <<>>, State);
 decode_start(<<$/, T/binary>>, Acc, State) ->
     decode_empty(T, State#state{current = #xml{tag = Acc}});
-decode_start(<<$>, T/binary>>, Acc, State) -> 
+decode_start(<<$>, T/binary>>, Acc, State) ->
     decode_child(T, <<>>, State#state{current = #xml{tag = Acc}});
 decode_start(<<H, T/binary>>, Acc, State) when ?WS(H) ->
     decode_name(T, <<>>, State#state{current = #xml{tag = Acc}});
