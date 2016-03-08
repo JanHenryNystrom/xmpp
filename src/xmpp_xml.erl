@@ -88,6 +88,13 @@
             C >= 16#FDF0, C =< 16#FFFD;
             C >= 16#10000, C =< 16#EFFFF).
 
+-define(CHAR(C),
+        C >= 16#9, C =< 16#A;
+        C =:= 16#D;
+        C >= 16#20, C =< 16#D7FF;
+        C >= 16#E000, C =< 16#FFFD;
+        C >= 16#10000, C =< 16#10FFFF).
+
 %% ===================================================================
 %% Library functions.
 %% ===================================================================
@@ -175,8 +182,6 @@ decode(<<H, T/binary>>, State = #state{}) when ?WS(H) ->
 decode(<<H, T/binary>>, State = #state{}) ->
     decode_text(T, <<H>>, State).
 
-
-              
 %% ===================================================================
 %% Internal functions.
 %% ===================================================================
@@ -186,7 +191,7 @@ decode(<<H, T/binary>>, State = #state{}) ->
 %% ===================================================================
 
 do_encode(Text) when is_binary(Text) -> escape(Text);
-do_encode(#cdata{data = Data}) -> [<<"<![CDATA[">>, Data, <<"]]>">>];
+do_encode(#cdata{data = Data}) -> [<<"<![CDATA[">>, clean(Data), <<"]]>">>];
 do_encode(#xml{tag = Tag, attrs = Attrs, children = []}) ->
     [<<"<">>, encode_tag(Tag), encode_attrs(Attrs), <<"/>">>];
 do_encode(#xml{tag = Tag, attrs = Attrs, children = Children}) ->
@@ -206,10 +211,26 @@ encode_attr({Name, Value}) ->
 encode_tag(Tag) when is_atom(Tag) -> atom_to_binary(Tag, utf8);
 encode_tag(Tag) -> Tag.
 
-escape(Value) ->
-    case needs_escaping(Value) of
-        true -> escape(Value, <<>>);
+clean(Value) when is_binary(Value) ->
+    case needs_cleaning(Value) of
+        true -> clean(Value, <<>>);
         false -> Value
+    end;
+clean(Value) -> clean(iolist_to_binary(Value)).
+
+needs_cleaning(<<>>) -> false;
+needs_cleaning(<<X/utf8, T/binary>>) when ?CHAR(X) -> needs_cleaning(T);
+needs_cleaning(_) -> true.
+
+clean(<<>>, Acc) -> Acc;
+clean(<<X/utf8, T/binary>>, Acc) when ?CHAR(X) -> clean(T, Acc);
+clean(<<X/utf8, T/binary>>, Acc) -> clean(T, <<Acc/binary, X/utf8>>).
+
+escape(Value) ->
+    Clean = clean(Value),
+    case needs_escaping(Clean) of
+        true -> escape(Clean, <<>>);
+        false -> Clean
     end.
 
 needs_escaping(<<>>) -> false;
