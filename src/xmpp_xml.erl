@@ -219,12 +219,12 @@ clean(Value) when is_binary(Value) ->
 clean(Value) -> clean(iolist_to_binary(Value)).
 
 needs_cleaning(<<>>) -> false;
-needs_cleaning(<<X/utf8, T/binary>>) when ?CHAR(X) -> needs_cleaning(T);
+needs_cleaning(<<H/utf8, T/binary>>) when ?CHAR(H) -> needs_cleaning(T);
 needs_cleaning(_) -> true.
 
 clean(<<>>, Acc) -> Acc;
-clean(<<X/utf8, T/binary>>, Acc) when ?CHAR(X) -> clean(T, Acc);
-clean(<<X/utf8, T/binary>>, Acc) -> clean(T, <<Acc/binary, X/utf8>>).
+clean(<<H/utf8, T/binary>>,Acc) when ?CHAR(H) -> clean(T,<<Acc/binary,H/utf8>>);
+clean(<<_/utf8, T/binary>>, Acc) -> clean(T, Acc).
 
 escape(Value) ->
     Clean = clean(Value),
