@@ -179,8 +179,10 @@ decode(<<$<, T/binary>>, State = #state{}) ->
     decode_start(T, <<>>, State);
 decode(<<H, T/binary>>, State = #state{}) when ?WS(H) ->
     decode(T, State);
-decode(<<H, T/binary>>, State = #state{}) ->
-    decode_text(T, <<H>>, State).
+decode(<<$&, T/binary>>, State = #state{}) ->
+    decode_text_escape(T, <<>>, <<>>, State);
+decode(<<H/utf8, T/binary>>, State = #state{}) ->
+    decode_text(T, <<H/utf8>>, State).
 
 %% ===================================================================
 %% Internal functions.
@@ -271,8 +273,8 @@ decode_start(<<H/utf8, T/binary>>, Acc = <<_, _/binary>>, State)
 decode_cdata(<<>>, Acc, State) -> more(decode_cdata, Acc, State);
 decode_cdata(<<$], T/binary>>, Acc, State) ->
     decode_cdata_end(T, Acc, <<$]>>, State);
-decode_cdata(<<H, T/binary>>, Acc, State) ->
-    decode_cdata(T, <<Acc/binary, H>>, State).
+decode_cdata(<<H/utf8, T/binary>>, Acc, State) ->
+    decode_cdata(T, <<Acc/binary, H/utf8>>, State).
 
 decode_cdata_end(<<>>, Acc, Term, State) ->
     more(decode_cdata_end, {Acc, Term}, State);
@@ -376,8 +378,8 @@ decode_text(T = <<$<, _/binary>>, Acc, State) ->
     pop(T, State#state{current = Acc});
 decode_text(<<$&, T/binary>>, Acc, State) ->
     decode_text_escape(T, <<>>, Acc, State);
-decode_text(<<H, T/binary>>, Acc, State) ->
-    decode_text(T, <<Acc/binary, H>>, State).
+decode_text(<<H/utf8, T/binary>>, Acc, State) ->
+    decode_text(T, <<Acc/binary, H/utf8>>, State).
 
 decode_text_escape(<<>>, Acc, TextValue, State) ->
     more(decode_text_escape, {Acc, TextValue}, State);
@@ -394,8 +396,8 @@ decode_text_ws(T = <<$<, _/binary>>, Acc, _, State) ->
     pop(T, State#state{current = Acc});
 decode_text_ws(<<$&, T/binary>>, Acc, WS, State) ->
     decode_text_escape(T, <<>>, <<Acc/binary, WS/binary>>, State);
-decode_text_ws(<<H, T/binary>>, Acc, WS, State) ->
-    decode_text(T, <<Acc/binary, WS/binary, H>>, State).
+decode_text_ws(<<H/utf8, T/binary>>, Acc, WS, State) ->
+    decode_text(T, <<Acc/binary, WS/binary, H/utf8>>, State).
 
 more(Func, State) -> more(Func, no_args, State).
 
